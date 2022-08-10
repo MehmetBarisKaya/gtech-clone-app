@@ -11,6 +11,7 @@ class UserProvider with ChangeNotifier {
       "https://firebasestorage.googleapis.com/v0/b/gtech-clone.appspot.com/o/profileImages%2Fdefault-avatar.jpg?alt=media&token=946d0344-731f-47e1-b5bf-18f76c4c4179";
 
   UserModel? _user;
+  bool? isAuth;
   //String? _userId;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -28,6 +29,22 @@ class UserProvider with ChangeNotifier {
   // }
 
 //%%%%%%%%%%%%
+  Stream<User?> get authState => _auth.authStateChanges();
+
+  Future getData() async {
+    var snap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_auth.currentUser?.uid)
+        .get();
+
+    _user = UserModel.fromSnap(snap);
+    notifyListeners();
+    //name = (snap.data() as Map<String, dynamic>)["name"];
+  }
+
+  UserModel get userDataModel {
+    return _user!;
+  }
 
   Future<void> register(
       {required String email,

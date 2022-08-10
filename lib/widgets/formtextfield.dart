@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 class FormTextField extends StatefulWidget {
   const FormTextField({
     Key? key,
-    required this.labelText,
+    this.labelText,
     required this.icon,
-    this.initialValues,
+    this.onFieldSubmitted,
+    this.initialValue,
+    this.onChanged,
     this.keyboardType,
     this.controller,
     this.validator,
@@ -13,10 +15,12 @@ class FormTextField extends StatefulWidget {
     this.isObscure = false,
     this.suffixIcon,
   }) : super(key: key);
-  final String? initialValues;
+  final String? initialValue;
   final TextInputType? keyboardType;
   final bool isObscure;
-  final String labelText;
+  final String? labelText;
+  final Function(String)? onChanged;
+  final Function(String)? onFieldSubmitted;
   final Icon icon;
   final IconButton? suffixIcon;
   final TextEditingController? controller;
@@ -31,8 +35,9 @@ class _FormTextFieldState extends State<FormTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      //autofillHints: const [AutofillHints.email],
-      initialValue: widget.initialValues,
+      onChanged: widget.onChanged,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      initialValue: widget.initialValue,
       validator: widget.validator,
       keyboardType: widget.keyboardType,
       controller: widget.controller,

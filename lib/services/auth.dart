@@ -40,6 +40,16 @@ class AuthService {
     await _auth.signOut();
   }
 
+  Future<void> update(
+      {required String uid,
+      required String name,
+      required String phoneNumber}) async {
+    await _firestore.collection("users").doc(uid).update({
+      "name": name,
+      "phoneNumber": phoneNumber,
+    });
+  }
+
   Future<void> register(
       {required String email,
       required String password,

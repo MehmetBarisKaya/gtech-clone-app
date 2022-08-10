@@ -3,12 +3,17 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gtech/model/user.dart';
+import 'package:gtech/services/auth.dart';
 import 'package:gtech/services/storage.dart';
+import 'package:gtech/utils/contants.dart';
 import 'package:gtech/utils/utils.dart';
-import 'package:gtech/widgets/profile_details.dart';
+import 'package:gtech/widgets/validator.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart';
+
+import '../widgets/formtextfield.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserModel userModel;
@@ -20,15 +25,14 @@ class ProfileScreen extends StatefulWidget {
 
 class _ImageUploadsState extends State<ProfileScreen> {
   FirebaseStorage storage = FirebaseStorage.instance;
+  final _nameController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-  File? _photo;
-  bool _isVisible = true;
+  final _formKey = GlobalKey<FormState>();
 
-  void _changeVisibility() {
-    setState(() {
-      _isVisible = !_isVisible;
-    });
-  }
+  File? _photo;
+
+  String? url;
 
   @override
   void initState() {
@@ -44,11 +48,23 @@ class _ImageUploadsState extends State<ProfileScreen> {
       if (pickedFile != null) {
         _photo = File(pickedFile.path);
         //uploadFile(context);
-        StorageServices().uploadImage(widget.userModel.uid, _photo!);
+        //uploadImage(widget.userModel.uid, _photo!);
       } else {
         print('No image selected.');
       }
     });
+  }
+
+  Future uploadImage(String id, File file) async {
+    var reference = storage.ref().child("profileImages/$id");
+    UploadTask uploadTask = reference.putFile(file);
+    TaskSnapshot taskSnapshot =
+        await uploadTask.whenComplete(() => null); //this will upload image
+    url = await taskSnapshot.ref.getDownloadURL();
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(id)
+        .update({"imageUrl": url});
   }
 
   Future imgFromCamera(BuildContext context) async {
@@ -60,24 +76,11 @@ class _ImageUploadsState extends State<ProfileScreen> {
       if (pickedFile != null) {
         _photo = File(pickedFile.path);
         //uploadFile(context);
-        StorageServices().uploadImage(widget.userModel.uid, _photo!);
+        StorageServices().uploadImage(widget.userModel.uid!, _photo!);
       } else {
         print('No image selected.');
       }
     });
-  }
-
-  Future uploadFile(BuildContext context) async {
-    if (_photo == null) return;
-    final fileName = basename(_photo!.path);
-    final destination = 'files/$fileName';
-
-    try {
-      final ref = FirebaseStorage.instance.ref(destination).child('file/');
-      await ref.putFile(_photo!);
-    } catch (e) {
-      showSnackBar(context, "Something went wrong!");
-    }
   }
 
   Center buildImagePicker(BuildContext context) {
@@ -87,29 +90,23 @@ class _ImageUploadsState extends State<ProfileScreen> {
           _showPicker(context);
         },
         child: CircleAvatar(
-          radius: 55,
-          child: _photo != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.file(
-                    _photo!,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.fitHeight,
-                  ),
-                )
-              : Container(
-                  decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(50)),
-                  width: 100,
-                  height: 100,
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.grey[800],
-                  ),
-                ),
-        ),
+            radius: 70,
+            child: _photo != null
+                ? CircleAvatar(
+                    radius: profilePictureRadius,
+                    backgroundImage: FileImage(_photo!),
+                  )
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: profilePictureRadius,
+                        backgroundImage:
+                            NetworkImage(widget.userModel.imageUrl!),
+                      ),
+                      const Icon(Icons.add_a_photo)
+                    ],
+                  )),
       ),
     );
   }
@@ -150,27 +147,61 @@ class _ImageUploadsState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            buildImagePicker(context),
-            const Divider(),
-            ProfileDetails(
-                name: widget.userModel.name,
-                email: widget.userModel.email,
-                phoneNumber: widget.userModel.phoneNumber),
-            Row(
+        padding: kDefaultPadding,
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Visibility(
-                  visible: _isVisible,
-                  child: ElevatedButton(
-                      onPressed: () {}, child: const Text("Update")),
+                buildImagePicker(context),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FormTextField(
+                          controller: _nameController,
+                          labelText: widget.userModel.name!,
+                          icon: const Icon(Icons.info_outline)),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      FormTextField(
+                          controller: _phoneNumberController,
+                          labelText: widget.userModel.phoneNumber!,
+                          icon: const Icon(Icons.info_outline)),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                    ],
+                  ),
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          // // setState(() {
+                          // //   uploadImage(widget.userModel.uid!, _photo!);
+                          // // });
+                          // if (_formKey.currentState!.validate()) {
+                          //   print(_nameController.text);
+                          //   print(_phoneNumberController.text);
+                          //   //   AuthService().update(
+                          //   //       uid: widget.userModel.uid!,
+                          //   //       name: _nameController.text.trim(),
+                          //   //       phoneNumber:
+                          //   //           _phoneNumberController.text.trim());
+                          // }
+                        },
+                        child: const Text("Update")),
+                  ],
+                )
               ],
-            )
-          ],
+            ),
+          ),
         ),
       ),
     );
