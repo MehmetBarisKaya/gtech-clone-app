@@ -16,22 +16,21 @@ class UserModel {
   });
 
   factory UserModel.fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
     return UserModel(
-      uid: snapshot["uid"],
-      email: snapshot["email"],
-      name: snapshot["name"],
-      phoneNumber: snapshot["phoneNumber"],
-      imageUrl: snapshot["imageUrl"] ?? "",
+      uid: snap["uid"] ?? "",
+      email: snap["email"] ?? "",
+      name: snap["name"] ?? "",
+      phoneNumber: snap["phoneNumber"] ?? "",
+      imageUrl: snap["imageUrl"] ?? "",
     );
   }
 
   factory UserModel.fromMap(Map<dynamic, dynamic> map) {
     return UserModel(
-      uid: map["uid"],
-      email: map["email"],
-      name: map["name"],
-      phoneNumber: map["phoneNumber"],
+      uid: map["uid"] ?? "",
+      email: map["email"] ?? "",
+      name: map["name"] ?? "",
+      phoneNumber: map["phoneNumber"] ?? "",
       imageUrl: map["imageUrl"] ?? "",
     );
   }

@@ -18,58 +18,63 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   //UserModel? userData;
   final user = FirebaseAuth.instance.currentUser!;
-
-  Future<void> getUSerData(BuildContext context) async {
-    await Provider.of<UserProvider>(context).getData();
-  }
-
-  // void getData() async {
-  //   var snap = await FirebaseFirestore.instance
-  //       .collection('users')
-  //       .doc(user.uid)
-  //       .get();
-  //   setState(() {
-  //     userData = UserModel.fromSnap(snap);
-  //   });
-
-  //   //name = (snap.data() as Map<String, dynamic>)["name"];
-  // }
+  var _isInit = true;
+  var _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    //getData();
+  }
+
+  Future<void> _refreshUser(BuildContext context) async {
+    await Provider.of<UserProvider>(context).getData();
   }
 
   @override
   void didChangeDependencies() {
-    getUSerData(context);
-
+    if (_isInit) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<UserProvider>(context).getData().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+    _isInit = false;
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context);
+    final userData = Provider.of<UserProvider>(context);
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Main Screen"),
-        ),
-        drawer: const NavigationDrawer(
-            //userData: user.userDataModel,
-            ),
-        body: FutureBuilder(
-            future: getUSerData(context),
-            builder: (context, snapshot) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Signed in ${user.userDataModel.name}"),
-                  ],
-                ),
-              );
-            }));
+      appBar: AppBar(
+        title: const Text("Main Screen"),
+      ),
+      drawer: const NavigationDrawer(
+          //userData: user.userDataModel,
+          ),
+      body: FutureBuilder(
+          future: _refreshUser(context),
+          builder: (context, snapshot) {
+            return _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(userData.userDataModel.name!),
+                      ],
+                    ),
+                  );
+          }),
+    );
   }
+  //);
 }
+//}

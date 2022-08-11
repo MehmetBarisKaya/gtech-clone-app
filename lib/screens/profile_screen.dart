@@ -7,6 +7,7 @@ import 'package:gtech/services/auth.dart';
 import 'package:gtech/services/storage.dart';
 import 'package:gtech/utils/contants.dart';
 import 'package:gtech/utils/utils.dart';
+import 'package:gtech/widgets/drawer.dart';
 import 'package:gtech/widgets/validator.dart';
 
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +15,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart';
 
 import '../widgets/formtextfield.dart';
+import 'home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserModel userModel;
@@ -25,13 +27,13 @@ class ProfileScreen extends StatefulWidget {
 
 class _ImageUploadsState extends State<ProfileScreen> {
   FirebaseStorage storage = FirebaseStorage.instance;
-  final _nameController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
+
   final ImagePicker _picker = ImagePicker();
   final _formKey = GlobalKey<FormState>();
 
   File? _photo;
-
+  String? name;
+  String? phoneNumber;
   String? url;
 
   @override
@@ -139,13 +141,25 @@ class _ImageUploadsState extends State<ProfileScreen> {
         });
   }
 
+  _saveForm() {
+    if (_photo != null) {
+      setState(() {
+        uploadImage(widget.userModel.uid!, _photo!);
+      });
+    }
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      AuthService().update(
+          uid: widget.userModel.uid!, name: name!, phoneNumber: phoneNumber!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    //UserModel user = Provider.of<UserProvider>(context).getUser;
-    //print(user);
-
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text("Update User"),
+      ),
       body: Padding(
         padding: kDefaultPadding,
         child: Center(
@@ -158,24 +172,33 @@ class _ImageUploadsState extends State<ProfileScreen> {
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FormTextField(
-                          controller: _nameController,
-                          labelText: widget.userModel.name!,
-                          icon: const Icon(Icons.info_outline)),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      FormTextField(
-                          controller: _phoneNumberController,
-                          labelText: widget.userModel.phoneNumber!,
-                          icon: const Icon(Icons.info_outline)),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                    ],
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FormTextField(
+                            onSaved: (value) {
+                              name = value!;
+                            },
+                            validator: FormValidator().isEmpty,
+                            initialValue: widget.userModel.name!,
+                            icon: const Icon(Icons.info_outline)),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        FormTextField(
+                            onSaved: (value) {
+                              phoneNumber = value!;
+                            },
+                            validator: FormValidator().isEmpty,
+                            initialValue: widget.userModel.phoneNumber!,
+                            icon: const Icon(Icons.info_outline)),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Row(
@@ -183,18 +206,8 @@ class _ImageUploadsState extends State<ProfileScreen> {
                   children: [
                     ElevatedButton(
                         onPressed: () {
-                          // // setState(() {
-                          // //   uploadImage(widget.userModel.uid!, _photo!);
-                          // // });
-                          // if (_formKey.currentState!.validate()) {
-                          //   print(_nameController.text);
-                          //   print(_phoneNumberController.text);
-                          //   //   AuthService().update(
-                          //   //       uid: widget.userModel.uid!,
-                          //   //       name: _nameController.text.trim(),
-                          //   //       phoneNumber:
-                          //   //           _phoneNumberController.text.trim());
-                          // }
+                          _saveForm();
+                          Navigator.pop(context);
                         },
                         child: const Text("Update")),
                   ],
