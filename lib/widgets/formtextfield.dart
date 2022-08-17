@@ -4,7 +4,7 @@ class FormTextField extends StatefulWidget {
   const FormTextField({
     Key? key,
     this.labelText,
-    required this.icon,
+    this.icon,
     this.onFieldSubmitted,
     this.initialValue,
     this.onChanged,
@@ -21,7 +21,7 @@ class FormTextField extends StatefulWidget {
   final String? labelText;
   final Function(String)? onChanged;
   final Function(String)? onFieldSubmitted;
-  final Icon icon;
+  final Icon? icon;
   final IconButton? suffixIcon;
   final TextEditingController? controller;
   final Function(String?)? onSaved;

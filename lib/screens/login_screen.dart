@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gtech/screens/register_screen.dart';
 import 'package:gtech/services/auth.dart';
+import 'package:gtech/utils/utils.dart';
 import 'package:gtech/widgets/formtextfield.dart';
 import 'package:gtech/widgets/validator.dart';
 
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? email;
   String? password;
   bool _isObscure = true;
+  bool _isLoading = false;
 
   void _toggleObscure() {
     setState(() {
@@ -64,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Email',
                       icon: const Icon(Icons.mail),
                       controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
                       onSaved: (value) {
                         setState(() {
                           print(value);
@@ -91,22 +94,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       height: 40,
                       width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: Theme.of(context).primaryColor,
-                          elevation: 20,
-                        ),
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            AuthService().signIn(
-                              emailController.text.trim(),
-                              passwordController.text.trim(),
-                              context,
-                            );
-                          }
-                        },
-                        child: const Text("Login"),
-                      ),
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(),
+                            )
+                          : ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                primary: Theme.of(context).primaryColor,
+                                elevation: 20,
+                              ),
+                              onPressed: () {
+                                _formsubmit(context);
+                                FocusScope.of(context).unfocus();
+                              },
+                              child: const Text("Login"),
+                            ),
                     ),
                     const SizedBox(
                       height: 20,
@@ -141,6 +143,32 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _formsubmit(BuildContext context) {
+    if (_formKey.currentState!.validate()) {
+      try {
+        setState(() {
+          _isLoading = true;
+        });
+        AuthService().signIn(
+          emailController.text.trim(),
+          passwordController.text.trim(),
+          context,
+        );
+        //Future.delayed(const Duration(seconds: 5));
+        setState(() {
+          _isLoading = false;
+        });
+        showSnackBar(context, "Success");
+      } catch (e) {
+        // ignore: avoid_print
+        setState(() {
+          _isLoading = false;
+        });
+        showSnackBar(context, "Fail!");
+      }
+    }
   }
 
   SizedBox mySizedBox() {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gtech/provider/user_provider.dart';
 import 'package:gtech/screens/home_screen.dart';
 import 'package:gtech/screens/login_screen.dart';
+import 'package:gtech/screens/main_screen.dart';
 import 'package:gtech/services/auth.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -154,6 +156,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               if (_paswordConfirmed()) {
+                                setState(() {
+                                  _isLoading = true;
+                                });
                                 // AuthService()
                                 //     .register(
                                 //         name: _nameController.text.trim(),
@@ -163,25 +168,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 //         phoneNumber:
                                 //             _phoneNumberController.text.trim(),
                                 //         context: context)
-                                authService
-                                    .register(
-                                        name: _nameController.text.trim(),
-                                        email: _emailController.text.trim(),
-                                        password:
-                                            _passwordController.text.trim(),
-                                        phoneNumber:
-                                            _phoneNumberController.text.trim(),
-                                        context: context)
-                                    .then((value) => Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const HomeScreen()),
-                                        ));
+                                try {
+                                  authService.register(
+                                      name: _nameController.text.trim(),
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text.trim(),
+                                      phoneNumber:
+                                          _phoneNumberController.text.trim(),
+                                      context: context);
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MainScreen()),
+                                  );
+                                } on Exception catch (e) {
+                                  print(e.toString());
+                                }
+                                setState(() {
+                                  _isLoading = false;
+                                });
                               }
                             }
                           },
-                          child: const Text("Register"),
+                          child: _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Text("Register"),
                         ),
                       ),
                       const SizedBox(
@@ -201,8 +219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                          const LoginScreen()),
+                                      builder: (context) => const MainScreen()),
                                 );
                               },
                             )

@@ -16,34 +16,36 @@ class UserProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  //final AuthService _authService = AuthService();
-
-  // UserModel get getUser {
-  //   return _user!;
-  // }
-
-  // Future<void> refreshUser() async {
-  //   UserModel user = await _authService.getUserDetails();
-  //   _user = user;
-  //   notifyListeners();
-  // }
-
 //%%%%%%%%%%%%
-  Stream<User?> get authState => _auth.authStateChanges();
+  Stream<DocumentSnapshot> streamDataCollection() {
+    return _firestore
+        .collection("users")
+        .doc(_auth.currentUser!.uid)
+        .snapshots();
+  }
 
   Future getData() async {
-    var snap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(_auth.currentUser?.uid)
-        .get();
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snap = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(_auth.currentUser?.uid)
+          .get();
+      if (snap != null) {
+        _user = UserModel.fromJson(snap.data()!);
+      }
+      print(_user?.email);
 
-    _user = UserModel.fromSnap(snap);
+      //_user = UserModel.fromSnap(snap);
+    } catch (e) {
+      print(e.toString());
+    }
     notifyListeners();
     //name = (snap.data() as Map<String, dynamic>)["name"];
   }
 
-  UserModel get userDataModel {
-    return _user!;
+  UserModel? get userDataModel {
+    return _user;
   }
 
   Future<void> register(

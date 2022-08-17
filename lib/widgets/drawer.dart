@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import '../screens/profile_screen.dart';
 
 class NavigationDrawer extends StatefulWidget {
-  ///final UserModel userData;
-  const NavigationDrawer({Key? key}) : super(key: key);
+  final UserModel userData;
+  const NavigationDrawer({required this.userData, Key? key}) : super(key: key);
 
   @override
   State<NavigationDrawer> createState() => _NavigationDrawerState();
@@ -17,21 +17,18 @@ class NavigationDrawer extends StatefulWidget {
 
 class _NavigationDrawerState extends State<NavigationDrawer> {
   //late Future _userDataFuture;
-  Future _getDrawerData() async {
-    return await Provider.of<UserProvider>(context).getData();
-  }
 
   @override
   void initState() {
-    //_userDataFuture = _getDrawerData();
     // TODO: implement initState
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final _userData = Provider.of<UserProvider>(context);
-    UserModel _userModel = _userData.userDataModel;
+    UserModel _userModel = widget.userData;
+    print(_userModel.imageUrl!);
+
     return SafeArea(
       child: ClipRRect(
         borderRadius: const BorderRadius.only(
@@ -45,7 +42,7 @@ class _NavigationDrawerState extends State<NavigationDrawer> {
                 const Divider(),
                 _buildMenuItems(
                     onTap: () {
-                      _navigateProfileScreen(context, _userData.userDataModel);
+                      _navigateProfileScreen(context, widget.userData);
                     },
                     icon: const Icon(Icons.verified_user_outlined),
                     title: "Profile Screen"),
@@ -68,10 +65,7 @@ class _NavigationDrawerState extends State<NavigationDrawer> {
     Navigator.pop(context);
     Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) => ProfileScreen(
-                userModel: userData,
-              )),
+      MaterialPageRoute(builder: (context) => const ProfileScreen()),
     );
   }
 

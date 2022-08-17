@@ -23,3 +23,26 @@ showAlertDialog({
     ),
   );
 }
+
+showAlertDialogWithTwoButton({
+  required BuildContext context,
+  String? titleText,
+  String? contentText,
+  Function()? yesOnPressed,
+  Function()? noOnPressed,
+}) {
+  return showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(titleText!),
+      content: Text(contentText!),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      actions: [
+        ElevatedButton(child: const Text("Yes"), onPressed: yesOnPressed),
+        ElevatedButton(child: const Text("No"), onPressed: noOnPressed),
+      ],
+    ),
+  );
+}

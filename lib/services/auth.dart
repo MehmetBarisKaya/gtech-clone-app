@@ -40,6 +40,13 @@ class AuthService {
     await _auth.signOut();
   }
 
+  Stream<DocumentSnapshot> streamDataCollection() {
+    return _firestore
+        .collection("users")
+        .doc(_auth.currentUser!.uid)
+        .snapshots();
+  }
+
   Future<void> update(
       {required String uid,
       required String name,
